@@ -46,10 +46,11 @@ public class EspSmartconfigModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void start(final ReadableMap options, final Promise promise) {
     String ssid = options.getString("ssid");
+    String bssid = options.getString("bssid");
     String pass = options.getString("password");
     String resultCount = "1";
 
-    Log.d(NAME, "ssid " + ssid + ":pass " + pass);
+    Log.d(NAME, "ssid: " + ssid + ", bssid: " + bssid + ", pass: " + pass);
 
     // stop before starting new task
     stop();
@@ -62,7 +63,7 @@ public class EspSmartconfigModule extends ReactContextBaseJavaModule {
         boolean resolved = false;
 
         for (IEsptouchResult resultInList : result) {
-          if(!resultInList.isCancelled() &&resultInList.getBssid() != null) {
+          if (!resultInList.isCancelled() &&resultInList.getBssid() != null) {
             WritableMap map = Arguments.createMap();
             map.putString("bssid", resultInList.getBssid());
             map.putString("ipv4", resultInList.getInetAddress().getHostAddress());
@@ -74,7 +75,7 @@ public class EspSmartconfigModule extends ReactContextBaseJavaModule {
           }
         }
 
-        if(resolved) {
+        if (resolved) {
           Log.d(NAME, "Successfully run smartConfig");
           promise.resolve(ret);
         } else {
@@ -82,7 +83,7 @@ public class EspSmartconfigModule extends ReactContextBaseJavaModule {
           promise.reject("new IllegalViewOperationException()");
         }
       }
-    }).execute(ssid, "", pass, resultCount);
+    }).execute(ssid, bssid, pass, resultCount);
   }
 
   public interface TaskListener {

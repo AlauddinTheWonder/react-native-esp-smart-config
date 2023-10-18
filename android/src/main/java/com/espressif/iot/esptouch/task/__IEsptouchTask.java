@@ -1,8 +1,8 @@
 package com.espressif.iot.esptouch.task;
 
-import com.espressif.iot.esptouch.BuildConfig;
 import com.espressif.iot.esptouch.IEsptouchListener;
 import com.espressif.iot.esptouch.IEsptouchResult;
+import com.facebook.react.BuildConfig;
 
 import java.util.List;
 

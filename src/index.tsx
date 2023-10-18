@@ -18,10 +18,20 @@ const EspSmartconfig = NativeModules.EspSmartconfig
     );
 
 interface IStartProps {
+  bssid: string;
   ssid: string;
   password: string;
 }
 
-export function start(args: IStartProps): Promise<number> {
+interface ISmartConfigResponse {
+  bssid: string;
+  ipv4: string;
+}
+
+export function start(args: IStartProps): Promise<ISmartConfigResponse[]> {
   return EspSmartconfig.start(args);
+}
+
+export function stop() {
+  return EspSmartconfig.stop();
 }

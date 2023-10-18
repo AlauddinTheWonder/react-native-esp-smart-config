@@ -1,9 +1,11 @@
 package com.espressif.iot.esptouch;
 
+import com.alan.espsmartconfig.BuildConfig;
+
 import java.util.List;
 
 public interface IEsptouchTask {
-    String ESPTOUCH_VERSION = BuildConfig.VERSION_NAME;
+    String ESPTOUCH_VERSION = "0.0.1";
 
     /**
      * set the esptouch listener, when one device is connected to the Ap, it will be called back

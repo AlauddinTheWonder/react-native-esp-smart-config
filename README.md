@@ -8,6 +8,18 @@ ESP-TOUCH protocol to seamlessly configure Wi-Fi devices connecting to a router.
 npm install react-native-esp-smartconfig
 ```
 
+## Congiguration
+
+### Android
+
+- Add following permissions into `android/src/main/AndroidManifest.xml`
+
+```
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+```
+
 ## Usage
 
 ```javascript
@@ -15,6 +27,7 @@ import espSmartconfig from 'react-native-esp-smartconfig';
 
 espSmartconfig
   .start({
+    bssid: 'wifi-network-bssid',
     ssid: 'wifi-network-ssid',
     password: 'wifi-password',
   })
@@ -48,4 +61,4 @@ MIT
 
 ---
 
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+Created by Alauddin Ansari (alauddinx27@gmail.com)
