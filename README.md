@@ -32,24 +32,26 @@ espSmartconfig
     password: 'wifi-password',
   })
   .then(function (results) {
-    //Array of device success do smartconfig
+    // Array of devices, successfully handshaked by smartconfig
     console.log(results);
     /*[
     {
-      'bssid': 'device-bssi1', //device bssid
-      'ipv4': '192.168.1.11' //local ip address
+      'bssid': 'device-bssid', // device bssid
+      'ipv4': '192.168.1.11'   // device local ip address
     }
   ]*/
   })
   .catch(function (error) {});
 
-espSmartconfig.stop(); //interrupt task
+// to cancel on-going smartconfig process
+espSmartconfig.stop();
 ```
 
 ## TODO
 
 - [ ] Android support
 - [ ] iOS support
+- [ ] Method to provide connected wifi's ssid and bssid
 
 ## Contributing
 
