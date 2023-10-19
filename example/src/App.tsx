@@ -14,7 +14,7 @@ export default function App() {
       password: 'Password',
     })
       .then((result) => {
-        console.log('response from smartConfig', result);
+        console.log('response from smartConfig: ', result);
       })
       .catch((error) => {
         console.log('No response from any device', error);

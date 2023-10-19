@@ -49,7 +49,7 @@ espSmartconfig.stop();
 
 ## TODO
 
-- [ ] Android support
+- [x] Android support
 - [ ] iOS support
 - [ ] Method to provide connected wifi's ssid and bssid
 

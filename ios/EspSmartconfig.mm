@@ -1,4 +1,5 @@
 #import "EspSmartconfig.h"
+#import <React/RCTLog.h>
 
 @implementation EspSmartconfig
 RCT_EXPORT_MODULE()
