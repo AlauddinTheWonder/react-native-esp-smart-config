@@ -1,17 +1,77 @@
 import * as React from 'react';
-
-import { StyleSheet, View, Button } from 'react-native';
+import {
+  Alert,
+  Button,
+  PermissionsAndroid,
+  Platform,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { start, stop } from 'react-native-esp-smartconfig';
+import {
+  refresh as refetchNetInfo,
+  type NetInfoState,
+  NetInfoStateType,
+} from '@react-native-community/netinfo';
 
 export default function App() {
+  const [apSsid, setSsid] = React.useState('Alauddin');
+  const [apBssid, setBssid] = React.useState('');
+  const [apPass, setPass] = React.useState('');
   const [sending, setSending] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkAndroidPerm = async () => {
+      const already = await PermissionsAndroid.check(
+        'android.permission.ACCESS_FINE_LOCATION'
+      );
+      if (!already) {
+        const granted = await PermissionsAndroid.request(
+          'android.permission.ACCESS_FINE_LOCATION'
+        );
+        if (granted === 'granted') {
+          setTimeout(() => {
+            refetchNetInfo().then(onFeedInfo);
+          }, 500);
+        } else {
+          Alert.alert(
+            'Permission denied!',
+            'Location permission is needed to retrive current wifi SSID. Please grant the permission why going to Settings->App Info'
+          );
+        }
+      }
+    };
+
+    if (Platform.OS === 'android') {
+      checkAndroidPerm();
+      refetchNetInfo().then(onFeedInfo);
+    } else {
+      setTimeout(() => {
+        refetchNetInfo().then(onFeedInfo);
+      }, 2000);
+    }
+  }, []);
+
+  const onFeedInfo = (netState: NetInfoState) => {
+    console.log('netState', netState);
+    if (netState.type === NetInfoStateType.wifi && netState.isConnected) {
+      const { bssid, ssid } = netState.details;
+      if (ssid) {
+        setSsid(ssid);
+      }
+      if (bssid) {
+        setBssid(bssid);
+      }
+    }
+  };
 
   const handleClick = () => {
     setSending(true);
     start({
-      bssid: '00:13:49:12:45:01',
-      ssid: 'Alauddin',
-      password: 'Password',
+      bssid: apBssid,
+      ssid: apSsid,
+      password: apPass,
     })
       .then((result) => {
         console.log('response from smartConfig: ', result);
@@ -29,11 +89,26 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {sending ? (
-        <Button title="Cancel" onPress={handleCancel} />
-      ) : (
-        <Button title="Start" onPress={handleClick} />
-      )}
+      <View>
+        <TextInput
+          value={apBssid}
+          placeholder="BSSID"
+          onChangeText={setBssid}
+        />
+        <TextInput value={apSsid} placeholder="SSID" onChangeText={setSsid} />
+        <TextInput
+          value={apPass}
+          placeholder="Password"
+          onChangeText={setPass}
+        />
+      </View>
+      <View>
+        {sending ? (
+          <Button title="Cancel" onPress={handleCancel} />
+        ) : (
+          <Button title="Start" onPress={handleClick} />
+        )}
+      </View>
     </View>
   );
 }
