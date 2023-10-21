@@ -15,6 +15,8 @@ import {
   NetInfoStateType,
 } from '@react-native-community/netinfo';
 
+const ACCESS_FINE_LOCATION = 'android.permission.ACCESS_FINE_LOCATION';
+
 export default function App() {
   const [apSsid, setSsid] = React.useState('Alauddin');
   const [apBssid, setBssid] = React.useState('');
@@ -23,13 +25,9 @@ export default function App() {
 
   React.useEffect(() => {
     const checkAndroidPerm = async () => {
-      const already = await PermissionsAndroid.check(
-        'android.permission.ACCESS_FINE_LOCATION'
-      );
+      const already = await PermissionsAndroid.check(ACCESS_FINE_LOCATION);
       if (!already) {
-        const granted = await PermissionsAndroid.request(
-          'android.permission.ACCESS_FINE_LOCATION'
-        );
+        const granted = await PermissionsAndroid.request(ACCESS_FINE_LOCATION);
         if (granted === 'granted') {
           setTimeout(() => {
             refetchNetInfo().then(onFeedInfo);
@@ -37,7 +35,7 @@ export default function App() {
         } else {
           Alert.alert(
             'Permission denied!',
-            'Location permission is needed to retrive current wifi SSID. Please grant the permission why going to Settings->App Info'
+            'Location permission is needed to retrive current wifi SSID.\nPlease grant the permission by going to Settings->App Info and restart the application.'
           );
         }
       }
@@ -45,16 +43,11 @@ export default function App() {
 
     if (Platform.OS === 'android') {
       checkAndroidPerm();
-      refetchNetInfo().then(onFeedInfo);
-    } else {
-      setTimeout(() => {
-        refetchNetInfo().then(onFeedInfo);
-      }, 2000);
     }
+    refetchNetInfo().then(onFeedInfo);
   }, []);
 
   const onFeedInfo = (netState: NetInfoState) => {
-    console.log('netState', netState);
     if (netState.type === NetInfoStateType.wifi && netState.isConnected) {
       const { bssid, ssid } = netState.details;
       if (ssid) {
@@ -66,7 +59,7 @@ export default function App() {
     }
   };
 
-  const handleClick = () => {
+  const handleStart = () => {
     setSending(true);
     start({
       bssid: apBssid,
@@ -75,9 +68,17 @@ export default function App() {
     })
       .then((result) => {
         console.log('response from smartConfig: ', result);
+        if (result && result.length > 0) {
+          const firstDevice = result[0];
+          Alert.alert(
+            'Found',
+            `Handshaked with device- bssid: ${firstDevice?.bssid}, ip: ${firstDevice?.ipv4}`
+          );
+        }
       })
       .catch((error) => {
         console.log('No response from any device', error);
+        Alert.alert('Error', 'No device responded');
       })
       .finally(() => setSending(false));
   };
@@ -89,25 +90,32 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <View>
+      <View style={styles.form}>
         <TextInput
+          style={styles.input}
           value={apBssid}
           placeholder="BSSID"
           onChangeText={setBssid}
         />
-        <TextInput value={apSsid} placeholder="SSID" onChangeText={setSsid} />
         <TextInput
+          style={styles.input}
+          value={apSsid}
+          placeholder="SSID"
+          onChangeText={setSsid}
+        />
+        <TextInput
+          style={styles.input}
           value={apPass}
           placeholder="Password"
           onChangeText={setPass}
         />
-      </View>
-      <View>
-        {sending ? (
-          <Button title="Cancel" onPress={handleCancel} />
-        ) : (
-          <Button title="Start" onPress={handleClick} />
-        )}
+        <View style={styles.button}>
+          {sending ? (
+            <Button title="Cancel" onPress={handleCancel} />
+          ) : (
+            <Button title="Start" onPress={handleStart} />
+          )}
+        </View>
       </View>
     </View>
   );
@@ -118,10 +126,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    rowGap: 16,
+    width: '100%',
+    paddingHorizontal: 24,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 4,
+    borderColor: '#cccccc',
+    paddingHorizontal: 16,
+    width: '80%',
+  },
+  button: {
+    width: 150,
   },
 });
