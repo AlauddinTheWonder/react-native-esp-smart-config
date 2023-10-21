@@ -8,11 +8,15 @@
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
 
+//#import <NetworkExtension/NetworkExtension.h>
+#import <SystemConfiguration/CaptiveNetwork.h>
+#import <CoreLocation/CoreLocation.h>
+
 #import "esptouch/ESPTouchDelegate.h"
 #import "esptouch/ESPTouchResult.h"
 #import "esptouch/ESPTouchTask.h"
 
-// EspTouchDelegateImpl interface start
+// EspTouch Delegate interface start
 @interface EspTouchDelegateImpl : NSObject<ESPTouchDelegate>
 
 @end
@@ -28,22 +32,31 @@
 }
 
 @end
-// EspTouchDelegateImpl interface end
+// EspTouch Delegate interface end
+
+// LocationManager deligate start
+@interface LocationManagerDelegateImpl : NSObject<CLLocationManagerDelegate>
+
+@end
+
+@implementation LocationManagerDelegateImpl
+
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+    NSLog(@"RNWIFI:statechaged %d", status);
+    [[NSNotificationCenter defaultCenter]
+     postNotificationName:@"RNWIFI:authorizationStatus" object:nil userInfo:nil];
+}
+
+@end
+// LocationManager deligate end
 
 @interface EspSmartconfig : NSObject <RCTBridgeModule>
 
-// to cancel ESPTouchTask when
 @property (atomic, strong) ESPTouchTask *_esptouchTask;
-
 @property (nonatomic, strong) EspTouchDelegateImpl *_esptouchDelegate;
-
-// without the condition, if the user tap confirm/cancel quickly enough,
-// the bug will arise. the reason is follows:
-// 0. task is starting created, but not finished
-// 1. the task is cancel for the task hasn't been created, it do nothing
-// 2. task is created
-// 3. Oops, the task should be cancelled, but it is running
 @property (nonatomic, strong) NSCondition *_condition;
+@property (nonatomic,strong) CLLocationManager *locationManager;
+@property (nonatomic, strong) LocationManagerDelegateImpl *_locationManagerDelegate;
 
 #endif
 

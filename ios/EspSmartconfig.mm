@@ -7,6 +7,12 @@ RCT_EXPORT_MODULE()
 {
     if (self = [super init]) {
         self._esptouchDelegate = [[EspTouchDelegateImpl alloc]init];
+        
+        if (@available(iOS 13, *)) {
+            self._locationManagerDelegate = [[LocationManagerDelegateImpl alloc]init];
+            self.locationManager = [[CLLocationManager alloc] init];
+            self.locationManager.delegate = self._locationManagerDelegate;
+        }
     }
     return self;
 }
@@ -54,8 +60,6 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
                     if (![resultInArray isSuc])
                         break;
                 }
-                
-                
             }
             if(resolved)
                 resolve(ret);
@@ -64,6 +68,60 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
             
         });
     });
+}
+
+RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    BOOL hasLocationPermission = [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedWhenInUse ||
+                                [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedAlways;
+
+    if (@available(iOS 13, *) && hasLocationPermission == NO) {
+        [self.locationManager requestWhenInUseAuthorization];
+        
+        [[NSNotificationCenter defaultCenter] addObserverForName:@"RNWIFI:authorizationStatus" object:nil queue:nil usingBlock:^(NSNotification *note)
+        {
+            if ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedWhenInUse ||
+                [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedAlways){
+                resolve([self getWifiInfo]);
+                return;
+            } else{
+                reject(RCTErrorUnspecified, nil, RCTErrorWithMessage(@"Permission not granted"));
+                return;
+            }
+        }];
+    } else {
+        resolve([self getWifiInfo]);
+    }
+}
+
+
+#pragma mark - the example of how to get wifi information
+
+- (NSDictionary *) getWifiInfo
+{
+    __block NSString *ssid = @"";
+    __block NSString *bssid = @"";
+
+    if (@available(iOS 14.0, *)) {
+//        [NEHotspotNetwork fetchCurrentWithCompletionHandler:^(NEHotspotNetwork * _Nullable currentNetwork) {
+//            ssid = [currentNetwork SSID];
+//            bssid = [currentNetwork BSSID];
+//        }];
+        
+        // dummy response until "NetworkExtension not found for arm64" fixed
+        bssid = @"INCOMPATIBLE";
+    } else {
+        NSArray *ifs = (__bridge_transfer id)CNCopySupportedInterfaces();
+        for (NSString *ifnam in ifs) {
+            NSDictionary *info = (__bridge_transfer id)CNCopyCurrentNetworkInfo((__bridge CFStringRef)ifnam);
+            if (info) {
+                ssid = [info valueForKey:@"SSID"];
+                bssid = [info valueForKey:@"BSSID"];
+            }
+        }
+    }
+    return @{@"bssid": bssid, @"ssid": ssid, @"ipv4": @"", @"isConnected": @true, @"isWifi": @true, @"frequency": @"null", @"type": @""};
 }
 
 

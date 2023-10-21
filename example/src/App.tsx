@@ -5,6 +5,7 @@ import {
   PermissionsAndroid,
   Platform,
   StyleSheet,
+  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -14,13 +15,32 @@ import {
   stop,
   type WifiInfoState,
 } from 'react-native-esp-smartconfig';
-import {
-  refresh as refetchNetInfo,
-  type NetInfoState,
-  NetInfoStateType,
-} from '@react-native-community/netinfo';
+// import {
+//   refresh as refetchNetInfo,
+//   type NetInfoState,
+//   NetInfoStateType,
+// } from '@react-native-community/netinfo';
 
 const ACCESS_FINE_LOCATION = 'android.permission.ACCESS_FINE_LOCATION';
+
+const checkAndroidPerm = async (callback: () => void) => {
+  const already = await PermissionsAndroid.check(ACCESS_FINE_LOCATION);
+  if (already) {
+    callback();
+  } else {
+    const granted = await PermissionsAndroid.request(ACCESS_FINE_LOCATION);
+    if (granted === 'granted') {
+      setTimeout(() => {
+        callback();
+      }, 500);
+    } else {
+      Alert.alert(
+        'Permission denied!',
+        'Location permission is needed to retrive current wifi SSID.\nPlease grant the permission by going to Settings->App Info and restart the application.'
+      );
+    }
+  }
+};
 
 export default function App() {
   const [apSsid, setSsid] = React.useState('');
@@ -28,58 +48,47 @@ export default function App() {
   const [apPass, setPass] = React.useState('');
   const [sending, setSending] = React.useState(false);
 
-  React.useEffect(() => {
-    const checkAndroidPerm = async (callback: () => void) => {
-      const already = await PermissionsAndroid.check(ACCESS_FINE_LOCATION);
-      if (already) {
-        callback();
-      } else {
-        const granted = await PermissionsAndroid.request(ACCESS_FINE_LOCATION);
-        if (granted === 'granted') {
-          setTimeout(() => {
-            callback();
-          }, 500);
-        } else {
-          Alert.alert(
-            'Permission denied!',
-            'Location permission is needed to retrive current wifi SSID.\nPlease grant the permission by going to Settings->App Info and restart the application.'
-          );
-        }
-      }
-    };
+  const [wifiState, setWifiState] = React.useState<WifiInfoState>();
 
+  React.useEffect(() => {
     if (Platform.OS === 'android') {
       checkAndroidPerm(() => {
         getWifiInfo()
-          .then(onFeedInfoAndroid)
+          .then(feedWifiInfo)
           .catch((error) => {
-            Alert.alert('Error', `Network error: ${error?.message}`);
+            Alert.alert('Error', error?.message);
           });
       });
-    } else {
-      refetchNetInfo().then(onFeedInfo);
+    } else if (Platform.OS === 'ios') {
+      // refetchNetInfo().then(feedNetInfoWifi);
+      getWifiInfo()
+        .then(feedWifiInfo)
+        .catch((error) => {
+          Alert.alert('Error', error?.message);
+        });
     }
   }, []);
 
-  const onFeedInfoAndroid = (state: WifiInfoState) => {
+  const feedWifiInfo = (state: WifiInfoState) => {
     console.log('wifi info', state);
+    setWifiState(state);
     if (state && state.isConnected && state.isWifi) {
       setSsid(state.ssid || '');
       setBssid(state.bssid || '');
     }
   };
 
-  const onFeedInfo = (netState: NetInfoState) => {
-    if (netState.type === NetInfoStateType.wifi && netState.isConnected) {
-      const { bssid, ssid } = netState.details;
-      if (ssid) {
-        setSsid(ssid);
-      }
-      if (bssid) {
-        setBssid(bssid);
-      }
-    }
-  };
+  // const feedNetInfoWifi = (netState: NetInfoState) => {
+  //   if (netState.type === NetInfoStateType.wifi && netState.isConnected) {
+  //     const { bssid, ssid } = netState.details;
+  //     if (ssid) {
+  //       setSsid(ssid);
+  //     }
+  //     if (bssid) {
+  //       setBssid(bssid);
+  //     }
+  //   }
+  // };
 
   const handleStart = () => {
     setSending(true);
@@ -138,6 +147,7 @@ export default function App() {
             <Button title="Start" onPress={handleStart} />
           )}
         </View>
+        <Text>{wifiState && JSON.stringify(wifiState)}</Text>
       </View>
     </View>
   );
@@ -145,6 +155,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#ffffff',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
