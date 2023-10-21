@@ -1,5 +1,11 @@
 package com.alan.espsmartconfig;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -19,6 +25,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.util.List;
+import java.util.Objects;
 
 @ReactModule(name = EspSmartconfigModule.NAME)
 public class EspSmartconfigModule extends ReactContextBaseJavaModule {
@@ -41,6 +48,50 @@ public class EspSmartconfigModule extends ReactContextBaseJavaModule {
       Log.d(NAME, "Cancel task");
       esptouchTask.interrupt();
     }
+  }
+
+  @ReactMethod
+  public void getWifiInfo(final Promise promise) {
+    Context context = Objects.requireNonNull(getCurrentActivity()).getApplicationContext();
+
+    ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+    if (networkInfo == null) {
+      promise.reject("NETWORK_NOT_AVAILABLE");
+      return;
+    }
+
+    boolean isWifi = networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+
+    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    WifiInfo info = wifiManager.getConnectionInfo();
+
+    if (info == null) {
+      promise.reject("WIFI_NOT_AVAILABLE");
+      return;
+    }
+
+    int ipAddress = info.getIpAddress();
+
+    @SuppressLint("DefaultLocale") String ip = String.format(
+      "%d.%d.%d.%d",
+      (ipAddress & 0xFF),
+      (ipAddress >> 8 & 0xFF),
+      (ipAddress >> 16 & 0xFF),
+      (ipAddress >> 24 & 0xFF)
+    );
+
+    WritableMap map = Arguments.createMap();
+    map.putString("bssid", info.getBSSID());
+    map.putString("ssid", info.getSSID().replaceAll("\"", ""));
+    map.putString("type", networkInfo.getTypeName());
+    map.putInt("frequency", info.getFrequency());
+    map.putString("ipv4", ip);
+    map.putBoolean("isConnected", networkInfo.isConnected());
+    map.putBoolean("isWifi", isWifi);
+
+    promise.resolve(map);
   }
 
   @ReactMethod

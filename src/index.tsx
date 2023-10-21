@@ -23,15 +23,29 @@ interface IStartProps {
   password: string;
 }
 
-interface ISmartConfigResponse {
+export interface SmartConfigResponse {
   bssid: string;
   ipv4: string;
 }
 
-export function start(args: IStartProps): Promise<ISmartConfigResponse[]> {
+export interface WifiInfoState {
+  bssid: string | null;
+  ssid: string | null;
+  ipv4: string;
+  isConnected: boolean;
+  isWifi: boolean;
+  frequency: number | null;
+  type: string;
+}
+
+export function start(args: IStartProps): Promise<SmartConfigResponse[]> {
   return EspSmartconfig.start(args);
 }
 
 export function stop() {
   return EspSmartconfig.stop();
+}
+
+export function getWifiInfo(): Promise<WifiInfoState> {
+  return EspSmartconfig.getWifiInfo();
 }

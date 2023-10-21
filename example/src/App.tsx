@@ -8,7 +8,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { start, stop } from 'react-native-esp-smartconfig';
+import {
+  getWifiInfo,
+  start,
+  stop,
+  type WifiInfoState,
+} from 'react-native-esp-smartconfig';
 import {
   refresh as refetchNetInfo,
   type NetInfoState,
@@ -18,19 +23,21 @@ import {
 const ACCESS_FINE_LOCATION = 'android.permission.ACCESS_FINE_LOCATION';
 
 export default function App() {
-  const [apSsid, setSsid] = React.useState('Alauddin');
+  const [apSsid, setSsid] = React.useState('');
   const [apBssid, setBssid] = React.useState('');
   const [apPass, setPass] = React.useState('');
   const [sending, setSending] = React.useState(false);
 
   React.useEffect(() => {
-    const checkAndroidPerm = async () => {
+    const checkAndroidPerm = async (callback: () => void) => {
       const already = await PermissionsAndroid.check(ACCESS_FINE_LOCATION);
-      if (!already) {
+      if (already) {
+        callback();
+      } else {
         const granted = await PermissionsAndroid.request(ACCESS_FINE_LOCATION);
         if (granted === 'granted') {
           setTimeout(() => {
-            refetchNetInfo().then(onFeedInfo);
+            callback();
           }, 500);
         } else {
           Alert.alert(
@@ -42,10 +49,25 @@ export default function App() {
     };
 
     if (Platform.OS === 'android') {
-      checkAndroidPerm();
+      checkAndroidPerm(() => {
+        getWifiInfo()
+          .then(onFeedInfoAndroid)
+          .catch((error) => {
+            Alert.alert('Error', `Network error: ${error?.message}`);
+          });
+      });
+    } else {
+      refetchNetInfo().then(onFeedInfo);
     }
-    refetchNetInfo().then(onFeedInfo);
   }, []);
+
+  const onFeedInfoAndroid = (state: WifiInfoState) => {
+    console.log('wifi info', state);
+    if (state && state.isConnected && state.isWifi) {
+      setSsid(state.ssid || '');
+      setBssid(state.bssid || '');
+    }
+  };
 
   const onFeedInfo = (netState: NetInfoState) => {
     if (netState.type === NetInfoStateType.wifi && netState.isConnected) {

@@ -16,7 +16,10 @@ npm install react-native-esp-smartconfig
 
 ```
 <uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 ```
 
@@ -51,7 +54,8 @@ espSmartconfig.stop();
 
 - [x] Android support
 - [x] iOS support
-- [ ] Method to provide connected wifi's ssid and bssid
+- [x] getWifiInfo - android
+- [ ] getWifiInfo - ios
 
 ## Contributing
 
