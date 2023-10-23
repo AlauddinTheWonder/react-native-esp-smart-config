@@ -1,6 +1,6 @@
 {
   "name": "react-native-esp-smartconfig",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "ESP-TOUCH protocol to seamlessly configure Wi-Fi devices connecting to a router.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -38,7 +38,12 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "smartConfig",
+    "espressif",
+    "esptouch",
+    "esp8266",
+    "esp32"
   ],
   "repository": "https://github.com/AlauddinTheWonder/react-native-esp-smart-config",
   "author": "Alauddin Ansari <alauddinx27@gmail.com> (https://github.com/AlauddinTheWonder)",
