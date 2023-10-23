@@ -73,26 +73,51 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
 RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    BOOL hasLocationPermission = [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedWhenInUse ||
-                                [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedAlways;
-
-    if (@available(iOS 13, *) && hasLocationPermission == NO) {
+    if (![self getUserLocationAuth]) {
         [self.locationManager requestWhenInUseAuthorization];
         
         [[NSNotificationCenter defaultCenter] addObserverForName:@"RNWIFI:authorizationStatus" object:nil queue:nil usingBlock:^(NSNotification *note)
         {
-            if ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedWhenInUse ||
-                [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedAlways){
+            if ([self getUserLocationAuth]){
                 resolve([self getWifiInfo]);
-                return;
             } else{
                 reject(RCTErrorUnspecified, nil, RCTErrorWithMessage(@"Permission not granted"));
-                return;
             }
         }];
     } else {
         resolve([self getWifiInfo]);
     }
+}
+
+//- (void)userLocationAuth {
+//    if (![self getUserLocationAuth]) {
+//        self._locationManagerDelegate = [[LocationManagerDelegateImpl alloc]init];
+//        self.locationManager = [[CLLocationManager alloc] init];
+//        self.locationManager.delegate = self._locationManagerDelegate;
+//        [self.locationManager requestWhenInUseAuthorization];
+//    }
+//}
+
+- (BOOL)getUserLocationAuth {
+    BOOL result = NO;
+    switch ([CLLocationManager authorizationStatus]) {
+        case kCLAuthorizationStatusNotDetermined:
+            break;
+        case kCLAuthorizationStatusRestricted:
+            break;
+        case kCLAuthorizationStatusDenied:
+            break;
+        case kCLAuthorizationStatusAuthorizedAlways:
+            result = YES;
+            break;
+        case kCLAuthorizationStatusAuthorizedWhenInUse:
+            result = YES;
+            break;
+            
+        default:
+            break;
+    }
+    return result;
 }
 
 
@@ -103,15 +128,12 @@ RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
     __block NSString *ssid = @"";
     __block NSString *bssid = @"";
 
-    if (@available(iOS 14.0, *)) {
+//    if (@available(iOS 14.0, *)) {
 //        [NEHotspotNetwork fetchCurrentWithCompletionHandler:^(NEHotspotNetwork * _Nullable currentNetwork) {
 //            ssid = [currentNetwork SSID];
 //            bssid = [currentNetwork BSSID];
 //        }];
-        
-        // dummy response until "NetworkExtension not found for arm64" fixed
-        bssid = @"INCOMPATIBLE";
-    } else {
+//    } else {
         NSArray *ifs = (__bridge_transfer id)CNCopySupportedInterfaces();
         for (NSString *ifnam in ifs) {
             NSDictionary *info = (__bridge_transfer id)CNCopyCurrentNetworkInfo((__bridge CFStringRef)ifnam);
@@ -120,7 +142,8 @@ RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
                 bssid = [info valueForKey:@"BSSID"];
             }
         }
-    }
+//    }
+    
     return @{@"bssid": bssid, @"ssid": ssid, @"ipv4": @"", @"isConnected": @true, @"isWifi": @true, @"frequency": @"null", @"type": @""};
 }
 
