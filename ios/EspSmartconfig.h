@@ -8,6 +8,9 @@
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
 
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+
 //#import <NetworkExtension/NetworkExtension.h>
 #import <SystemConfiguration/CaptiveNetwork.h>
 #import <CoreLocation/CoreLocation.h>
@@ -42,7 +45,6 @@
 @implementation LocationManagerDelegateImpl
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
-    NSLog(@"RNWIFI:statechaged %d", status);
     [[NSNotificationCenter defaultCenter]
      postNotificationName:@"RNWIFI:authorizationStatus" object:nil userInfo:nil];
 }

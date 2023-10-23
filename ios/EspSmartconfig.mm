@@ -144,7 +144,13 @@ RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
         }
 //    }
     
-    return @{@"bssid": bssid, @"ssid": ssid, @"ipv4": @"", @"isConnected": @true, @"isWifi": @true, @"frequency": @"null", @"type": @""};
+    NSString *ip = [self getIPAddress];
+    bool isConnected = [ip length] > 0;
+    NSString *conn = isConnected ? @"true" : @"false";
+    NSString *iswifi = isConnected ? @"true" : @"false";
+    NSString *type = isConnected ? @"wifi" : @"none";
+    
+    return @{@"bssid": bssid, @"ssid": ssid, @"ipv4": ip, @"isConnected": conn, @"isWifi": iswifi, @"frequency": @"null", @"type": type};
 }
 
 
@@ -179,6 +185,37 @@ RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
     NSLog(@"ESPViewController executeForResult() result is: %@",esptouchResults);
     return esptouchResults;
 }
+
+#pragma mark - the example to get local wifi ip address
+- (NSString *)getIPAddress {
+
+    NSString *address = @"";
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    int success = 0;
+    // retrieve the current interfaces - returns 0 on success
+    success = getifaddrs(&interfaces);
+    if (success == 0) {
+        // Loop through linked list of interfaces
+        temp_addr = interfaces;
+        while(temp_addr != NULL) {
+            if(temp_addr->ifa_addr->sa_family == AF_INET) {
+                NSString *ifName = [NSString stringWithUTF8String:temp_addr->ifa_name];
+
+                // Check if interface is en0 which is the wifi connection on the iPhone
+                if([ifName isEqualToString:@"en0"]) {
+                    // Get NSString from C String
+                    address = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)];
+                }
+            }
+            temp_addr = temp_addr->ifa_next;
+        }
+    }
+    // Free memory
+    freeifaddrs(interfaces);
+    return address;
+
+} 
 
 
 @end

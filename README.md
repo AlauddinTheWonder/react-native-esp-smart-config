@@ -23,7 +23,62 @@ npm install react-native-esp-smartconfig
 <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 ```
 
+### iOS
+
+- Add following entitlements into `ios/<project-name>/<project-name>.entitlements`
+
+```
+<key>com.apple.developer.networking.wifi-info</key><true/>
+<key>com.apple.developer.networking.HotspotConfiguration</key><true>
+```
+
+- Add following capabilites into `ios/<project-name>/info.plist`
+
+```
+<key>NSLocalNetworkUsageDescription</key>
+<string>The application needs to access the local network, allowing UDP to send broadcasts</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>This application uses location permissions to obtain currently connected Wi-Fi information. This application does not collect, store or record any location data.</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>This application uses location permissions to obtain currently connected Wi-Fi information. This application does not collect, store or record any location data.</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This application uses location permissions to obtain currently connected Wi-Fi information. This application does not collect, store or record any location data.</string>
+```
+
+- Add adding them, run `pod install` inside `ios` directory.
+
 ## Usage
+
+- Available methods and interfaces
+
+```typescript
+interface SmartConfigResponse {
+  bssid: string;
+  ipv4: string;
+}
+
+interface WifiInfoState {
+  bssid: string | null;
+  ssid: string | null;
+  ipv4: string;
+  isConnected: boolean;
+  isWifi: boolean;
+  frequency: number | null; // android only
+  type: string; // connection type name i.e wifi/cellular/none
+}
+
+function start({
+  bssid: string;
+  ssid: string;
+  password: string;
+}): Promise<SmartConfigResponse[]>;
+
+function stop();
+
+function getWifiInfo(): Promise<WifiInfoState>;
+```
+
+- Javascript example
 
 ```javascript
 import espSmartconfig from 'react-native-esp-smartconfig';
