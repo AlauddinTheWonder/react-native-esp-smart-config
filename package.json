@@ -1,6 +1,6 @@
 {
   "name": "react-native-esp-smartconfig",
-  "version": "0.0.1",
+  "version": "0.3.0",
   "description": "ESP-TOUCH protocol to seamlessly configure Wi-Fi devices connecting to a router.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
