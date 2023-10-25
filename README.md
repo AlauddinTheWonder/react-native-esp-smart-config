@@ -45,7 +45,7 @@ npm install react-native-esp-smartconfig
 <string>This application uses location permissions to obtain currently connected Wi-Fi information. This application does not collect, store or record any location data.</string>
 ```
 
-- Add adding them, run `pod install` inside `ios` directory.
+- After adding them all, run `pod install` inside `ios` directory.
 
 ## Usage
 
