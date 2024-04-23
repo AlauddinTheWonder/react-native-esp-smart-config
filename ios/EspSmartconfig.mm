@@ -215,7 +215,10 @@ RCT_EXPORT_METHOD(getWifiInfo:(RCTPromiseResolveBlock)resolve
     freeifaddrs(interfaces);
     return address;
 
-} 
+}
 
++ (BOOL) requiresMainQueueSetup { 
+    return YES; 
+}
 
 @end
