@@ -64,7 +64,7 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
             if(resolved)
                 resolve(ret);
             else
-                reject(RCTErrorUnspecified, nil, RCTErrorWithMessage(@"Timoutout or not Found"));
+                reject(RCTErrorUnspecified, nil, RCTErrorWithMessage(@"Timeout or not found"));
             
         });
     });
